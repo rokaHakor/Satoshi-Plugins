@@ -67,6 +67,20 @@ subprojects {
     apply(plugin = "se.patrikerdes.use-latest-versions")
     apply(plugin = "com.simonharrer.modernizer")
 
+    dependencies {
+        compileOnly("com.openosrs:runelite-api:$rlVersion")
+        compileOnly("com.openosrs:runelite-client:$rlVersion")
+        compileOnly("com.openosrs:http-api:$rlVersion")
+        compileOnly("com.openosrs.rs:runescape-api:$rlVersion")
+
+        compileOnly(Libraries.okhttp3)
+        compileOnly(Libraries.guice)
+        compileOnly(Libraries.lombok)
+        compileOnly(Libraries.pf4j)
+        compileOnly(Libraries.apacheCommonsText)
+        compileOnly(Libraries.gson)
+    }
+
     configure<PublishingExtension> {
         repositories {
             maven {
@@ -99,7 +113,8 @@ subprojects {
 
         withType<Jar> {
             doLast {
-                val externalManagerDirectory: String = project.findProperty("externalManagerDirectory")?.toString() ?: System.getProperty("user.home") + "\\.openosrs\\plugins"
+                val externalManagerDirectory: String = project.findProperty("externalManagerDirectory")?.toString()
+                    ?: System.getProperty("user.home") + "\\.openosrs\\plugins"
                 copy {
                     from("./build/libs/")
                     into(externalManagerDirectory)
