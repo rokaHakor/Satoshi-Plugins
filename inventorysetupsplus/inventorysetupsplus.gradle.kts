@@ -1,6 +1,6 @@
 import ProjectVersions.rlVersion
 
-version = "1.0.1"
+version = "1.0.2"
 
 project.extra["PluginName"] = "Inventory Setups Plus"
 project.extra["PluginDescription"] =
