@@ -85,13 +85,13 @@ import java.util.stream.Collectors;
 
 @Extension
 @PluginDescriptor(
-        name = "Inventory Setups",
+        name = "Inventory Setups Plus",
         description = "Save gear setups for specific activities"
 )
 @Slf4j
 public class InventorySetupsPlugin extends Plugin {
 
-    public static final String CONFIG_GROUP = "inventorysetups";
+    public static final String CONFIG_GROUP = "inventorysetupsplus";
     public static final String CONFIG_KEY = "setups";
     public static final String CONFIG_KEY_COMPACT_MODE = "compactMode";
     public static final String CONFIG_KEY_SORTING_MODE = "sortingMode";
