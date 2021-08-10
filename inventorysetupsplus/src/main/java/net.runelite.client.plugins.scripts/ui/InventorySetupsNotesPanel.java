@@ -26,7 +26,7 @@ package net.runelite.client.plugins.scripts.ui;
 
 import net.runelite.client.plugins.scripts.InventorySetup;
 import net.runelite.client.plugins.scripts.InventorySetupsItem;
-import net.runelite.client.plugins.scripts.InventorySetupsPlugin;
+import net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin;
 import lombok.Setter;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
@@ -57,7 +57,7 @@ public class InventorySetupsNotesPanel extends InventorySetupsContainerPanel
 	@Setter
 	private InventorySetup currentInventorySetup;
 
-	InventorySetupsNotesPanel(ItemManager itemManager, InventorySetupsPlugin plugin)
+	InventorySetupsNotesPanel(ItemManager itemManager, InventorySetupsPlusPlugin plugin)
 	{
 		super(itemManager, plugin, "Notes");
 	}

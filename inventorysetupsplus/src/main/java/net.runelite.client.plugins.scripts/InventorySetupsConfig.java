@@ -32,11 +32,11 @@ import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Keybind;
 
-import static net.runelite.client.plugins.scripts.InventorySetupsPlugin.CONFIG_KEY_COMPACT_MODE;
-import static net.runelite.client.plugins.scripts.InventorySetupsPlugin.CONFIG_KEY_HIDE_BUTTON;
-import static net.runelite.client.plugins.scripts.InventorySetupsPlugin.CONFIG_KEY_SORTING_MODE;
+import static net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin.CONFIG_KEY_COMPACT_MODE;
+import static net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin.CONFIG_KEY_HIDE_BUTTON;
+import static net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin.CONFIG_KEY_SORTING_MODE;
 
-@ConfigGroup(InventorySetupsPlugin.CONFIG_GROUP)
+@ConfigGroup(InventorySetupsPlusPlugin.CONFIG_GROUP)
 public interface InventorySetupsConfig extends Config
 {
 

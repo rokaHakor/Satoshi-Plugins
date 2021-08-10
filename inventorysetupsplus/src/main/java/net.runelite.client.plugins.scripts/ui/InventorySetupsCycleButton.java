@@ -24,7 +24,7 @@
  */
 package net.runelite.client.plugins.scripts.ui;
 
-import net.runelite.client.plugins.scripts.InventorySetupsPlugin;
+import net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -37,7 +37,7 @@ import java.util.ArrayList;
 // When clicked, the cycle button will properly set the icons, tooltips, and execute the provided runnable for any necessary logic
 public class InventorySetupsCycleButton<T> extends JLabel
 {
-	private final InventorySetupsPlugin plugin;
+	private final InventorySetupsPlusPlugin plugin;
 	private final ArrayList<T> states;
 	private final ArrayList<ImageIcon> icons;
 	private final ArrayList<ImageIcon> hoverIcons;
@@ -45,7 +45,7 @@ public class InventorySetupsCycleButton<T> extends JLabel
 	private final Runnable runnable;
 	private int currentIndex;
 
-	InventorySetupsCycleButton(final InventorySetupsPlugin plugin, final ArrayList<T> states, final ArrayList<ImageIcon> icons, final ArrayList<ImageIcon> hoverIcons, final ArrayList<String> tooltips, final Runnable runnable)
+	InventorySetupsCycleButton(final InventorySetupsPlusPlugin plugin, final ArrayList<T> states, final ArrayList<ImageIcon> icons, final ArrayList<ImageIcon> hoverIcons, final ArrayList<String> tooltips, final Runnable runnable)
 	{
 		super();
 		this.plugin = plugin;

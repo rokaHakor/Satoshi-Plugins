@@ -25,7 +25,7 @@
 package net.runelite.client.plugins.scripts.ui;
 
 import net.runelite.client.plugins.scripts.InventorySetupsSlotID;
-import net.runelite.client.plugins.scripts.InventorySetupsPlugin;
+import net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin;
 import net.runelite.api.ItemID;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.scripts.InventorySetup;
@@ -50,7 +50,7 @@ public class InventorySetupsInventoryPanel extends InventorySetupsContainerPanel
 	private ArrayList<InventorySetupsSlot> inventorySlots;
 	private InventorySetupsRunePouchPanel runePouchPanel;
 
-	InventorySetupsInventoryPanel(final ItemManager itemManager, final InventorySetupsPlugin plugin, final InventorySetupsRunePouchPanel runePouchPanel)
+	InventorySetupsInventoryPanel(final ItemManager itemManager, final InventorySetupsPlusPlugin plugin, final InventorySetupsRunePouchPanel runePouchPanel)
 	{
 		super(itemManager, plugin, "Inventory");
 		this.runePouchPanel = runePouchPanel;

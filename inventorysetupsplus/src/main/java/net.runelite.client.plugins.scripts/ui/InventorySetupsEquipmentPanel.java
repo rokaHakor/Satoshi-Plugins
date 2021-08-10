@@ -25,7 +25,7 @@
 package net.runelite.client.plugins.scripts.ui;
 
 import net.runelite.client.plugins.scripts.InventorySetupsSlotID;
-import net.runelite.client.plugins.scripts.InventorySetupsPlugin;
+import net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin;
 import net.runelite.api.EquipmentInventorySlot;
 
 import net.runelite.client.game.ItemManager;
@@ -43,7 +43,7 @@ public class InventorySetupsEquipmentPanel extends InventorySetupsContainerPanel
 {
 	private HashMap<EquipmentInventorySlot, InventorySetupsSlot> equipmentSlots;
 
-	InventorySetupsEquipmentPanel(final ItemManager itemManager, final InventorySetupsPlugin plugin)
+	InventorySetupsEquipmentPanel(final ItemManager itemManager, final InventorySetupsPlusPlugin plugin)
 	{
 		super(itemManager, plugin, "Equipment");
 	}

@@ -27,7 +27,7 @@ package net.runelite.client.plugins.scripts.ui;
 import net.runelite.client.plugins.scripts.InventorySetup;
 import net.runelite.client.plugins.scripts.InventorySetupsItem;
 import net.runelite.client.plugins.scripts.InventorySetupsSlotID;
-import net.runelite.client.plugins.scripts.InventorySetupsPlugin;
+import net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 
@@ -39,7 +39,7 @@ public class InventorySetupsRunePouchPanel extends InventorySetupsContainerPanel
 {
 	private ArrayList<InventorySetupsSlot> runeSlots;
 
-	InventorySetupsRunePouchPanel(ItemManager itemManager, InventorySetupsPlugin plugin)
+	InventorySetupsRunePouchPanel(ItemManager itemManager, InventorySetupsPlusPlugin plugin)
 	{
 		super(itemManager, plugin, "Rune Pouch");
 	}

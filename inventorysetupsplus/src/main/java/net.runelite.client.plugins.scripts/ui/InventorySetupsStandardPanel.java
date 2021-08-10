@@ -25,7 +25,7 @@
 package net.runelite.client.plugins.scripts.ui;
 
 import net.runelite.client.plugins.scripts.InventorySetup;
-import net.runelite.client.plugins.scripts.InventorySetupsPlugin;
+import net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin;
 
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -106,7 +106,7 @@ public class InventorySetupsStandardPanel extends InventorySetupsPanel
 
 	static
 	{
-		final BufferedImage bankFilterImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlugin.class, "/filter_icon.png");
+		final BufferedImage bankFilterImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlusPlugin.class, "/filter_icon.png");
 		final BufferedImage bankFilterHover = ImageUtil.luminanceOffset(bankFilterImg, -150);
 		BANK_FILTER_ICON = new ImageIcon(bankFilterImg);
 		BANK_FILTER_HOVER_ICON = new ImageIcon(bankFilterHover);
@@ -114,7 +114,7 @@ public class InventorySetupsStandardPanel extends InventorySetupsPanel
 		NO_BANK_FILTER_ICON = new ImageIcon(bankFilterHover);
 		NO_BANK_FILTER_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(bankFilterHover, -100));
 
-		final BufferedImage unorderedHighlightImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlugin.class, "/unordered_highlight_icon.png");
+		final BufferedImage unorderedHighlightImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlusPlugin.class, "/unordered_highlight_icon.png");
 		final BufferedImage unorderedHighlightHover = ImageUtil.luminanceOffset(unorderedHighlightImg, -150);
 		UNORDERED_HIGHLIGHT_ICON = new ImageIcon(unorderedHighlightImg);
 		UNORDERED_HIGHLIGHT_HOVER_ICON = new ImageIcon(unorderedHighlightHover);
@@ -122,7 +122,7 @@ public class InventorySetupsStandardPanel extends InventorySetupsPanel
 		NO_UNORDERED_HIGHLIGHT_ICON = new ImageIcon(unorderedHighlightHover);
 		NO_UNORDERED_HIGHLIGHT_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(unorderedHighlightHover, -100));
 
-		final BufferedImage highlightToggleImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlugin.class, "/highlight_icon.png");
+		final BufferedImage highlightToggleImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlusPlugin.class, "/highlight_icon.png");
 		final BufferedImage highlightToggleHover = ImageUtil.luminanceOffset(highlightToggleImg, -150);
 		TOGGLE_HIGHLIGHT_ICON = new ImageIcon(highlightToggleImg);
 		TOGGLE_HIGHLIGHT_HOVER_ICON = new ImageIcon(highlightToggleHover);
@@ -130,7 +130,7 @@ public class InventorySetupsStandardPanel extends InventorySetupsPanel
 		NO_TOGGLE_HIGHLIGHT_ICON = new ImageIcon(highlightToggleHover);
 		NO_TOGGLE_HIGHLIGHT_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(highlightToggleHover, -100));
 
-		final BufferedImage highlightImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlugin.class, "/highlight_color_icon.png");
+		final BufferedImage highlightImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlusPlugin.class, "/highlight_color_icon.png");
 		final BufferedImage highlightHover = ImageUtil.luminanceOffset(highlightImg, -150);
 		HIGHLIGHT_COLOR_ICON = new ImageIcon(highlightImg);
 		HIGHLIGHT_COLOR_HOVER_ICON = new ImageIcon(highlightHover);
@@ -138,22 +138,22 @@ public class InventorySetupsStandardPanel extends InventorySetupsPanel
 		NO_HIGHLIGHT_COLOR_ICON = new ImageIcon(highlightHover);
 		NO_HIGHLIGHT_COLOR_HOVER_ICON = new ImageIcon(ImageUtil.alphaOffset(highlightHover, -100));
 
-		final BufferedImage viewImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlugin.class, "/visible_icon.png");
+		final BufferedImage viewImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlusPlugin.class, "/visible_icon.png");
 		final BufferedImage viewImgHover = ImageUtil.luminanceOffset(viewImg, -150);
 		VIEW_SETUP_ICON = new ImageIcon(viewImg);
 		VIEW_SETUP_HOVER_ICON = new ImageIcon(viewImgHover);
 
-		final BufferedImage exportImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlugin.class, "/export_icon.png");
+		final BufferedImage exportImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlusPlugin.class, "/export_icon.png");
 		final BufferedImage exportImgHover = ImageUtil.luminanceOffset(exportImg, -150);
 		EXPORT_ICON = new ImageIcon(exportImg);
 		EXPORT_HOVER_ICON = new ImageIcon(exportImgHover);
 
-		final BufferedImage deleteImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlugin.class, "/delete_icon.png");
+		final BufferedImage deleteImg = ImageUtil.getResourceStreamFromClass(InventorySetupsPlusPlugin.class, "/delete_icon.png");
 		DELETE_ICON = new ImageIcon(deleteImg);
 		DELETE_HOVER_ICON = new ImageIcon(ImageUtil.luminanceOffset(deleteImg, -100));
 	}
 
-	InventorySetupsStandardPanel(InventorySetupsPlugin plugin, InventorySetupsPluginPanel panel, InventorySetup invSetup)
+	InventorySetupsStandardPanel(InventorySetupsPlusPlugin plugin, InventorySetupsPluginPanel panel, InventorySetup invSetup)
 	{
 		super(plugin, panel, invSetup);
 

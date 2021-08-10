@@ -26,7 +26,7 @@ package net.runelite.client.plugins.scripts.ui;
 
 import net.runelite.client.plugins.scripts.InventorySetup;
 import net.runelite.client.plugins.scripts.InventorySetupsSortingID;
-import net.runelite.client.plugins.scripts.InventorySetupsPlugin;
+import net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -36,12 +36,12 @@ import javax.swing.JPopupMenu;
 public class InventorySetupsPanel extends JPanel
 {
 
-	protected final InventorySetupsPlugin plugin;
+	protected final InventorySetupsPlusPlugin plugin;
 	protected final InventorySetupsPluginPanel panel;
 	protected final InventorySetup inventorySetup;
 	protected final JPopupMenu moveSetupPopupMenu;
 
-	InventorySetupsPanel(InventorySetupsPlugin plugin, InventorySetupsPluginPanel panel, InventorySetup invSetup)
+	InventorySetupsPanel(InventorySetupsPlusPlugin plugin, InventorySetupsPluginPanel panel, InventorySetup invSetup)
 	{
 		this.plugin = plugin;
 		this.panel = panel;

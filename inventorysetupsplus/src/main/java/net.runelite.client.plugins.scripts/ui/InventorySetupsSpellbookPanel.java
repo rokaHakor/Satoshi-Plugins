@@ -27,7 +27,7 @@ package net.runelite.client.plugins.scripts.ui;
 import net.runelite.client.plugins.scripts.InventorySetup;
 import net.runelite.client.plugins.scripts.InventorySetupsItem;
 import net.runelite.client.plugins.scripts.InventorySetupsSlotID;
-import net.runelite.client.plugins.scripts.InventorySetupsPlugin;
+import net.runelite.client.plugins.scripts.InventorySetupsPlusPlugin;
 import net.runelite.api.SpriteID;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
@@ -46,7 +46,7 @@ public class InventorySetupsSpellbookPanel extends InventorySetupsContainerPanel
 	private InventorySetupsSlot spellbookSlot;
 	private ArrayList<BufferedImage> spellbookImages;
 
-	InventorySetupsSpellbookPanel(ItemManager itemManager, InventorySetupsPlugin plugin)
+	InventorySetupsSpellbookPanel(ItemManager itemManager, InventorySetupsPlusPlugin plugin)
 	{
 		super(itemManager, plugin, "Spellbook");
 		spellbookImages = new ArrayList<>();
