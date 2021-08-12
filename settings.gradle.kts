@@ -26,7 +26,7 @@
 rootProject.name = "Satoshi Plugins"
 
 include(":dropall")
-include(":inventorysetups")
+include(":invsetupwithdrawer")
 
 for (project in rootProject.children) {
     project.apply {

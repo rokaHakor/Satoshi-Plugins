@@ -1,10 +1,7 @@
-import ProjectVersions.rlVersion
+version = "1.0.0"
 
-version = "1.0.1"
-
-project.extra["PluginName"] = "Inventory Setups"
-project.extra["PluginDescription"] =
-    "Setups up your Inventory"
+project.extra["PluginName"] = "Inv Setup Withdrawer"
+project.extra["PluginDescription"] = "Withdraw inventory setups for specific activities, use with Plugin-hub Inventory Setups"
 
 dependencies {
     annotationProcessor(Libraries.lombok)
