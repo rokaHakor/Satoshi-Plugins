@@ -84,8 +84,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
 
     @Subscribe
     public void onMenuOptionClicked(MenuOptionClicked event) {
-        if (targetMenu != null) {//TODO
-            //log.info("Target Menu: {}, {}, {}", targetMenu.getOption(), targetMenu.getTarget(), targetMenu.getId());
+        if (targetMenu != null) {
             event.setMenuEntry(targetMenu);
             if (startWithdraw) {
                 if (event.getMenuTarget().contains("Withdraw")) {
@@ -115,7 +114,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
     @Subscribe
     private void onClientTick(final ClientTick event) {
         if (targetMenu == null && withdrawLoop && startWithdraw && clickTimer < System.currentTimeMillis()) {
-            withdrawNext();//log.info("Time: " + System.currentTimeMillis());
+            withdrawNext();
         }
     }
 
@@ -131,8 +130,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         return true;
     }
 
-    //new MenuEntry("", "", 1, MenuAction.CC_OP.getId(), -1, 786473, false)
-    public void quickWithdrawSetup() {//TODO
+    public void quickWithdrawSetup() {
         ArrayList<InventorySetupsItem> currentSetup = ReflectionAgent.getCurrentSetup(this, pluginManager);
         if (client.getItemContainer(InventoryID.BANK) == null || currentSetup == null) {
             return;
@@ -272,11 +270,9 @@ public class InvSetupWithdrawPlugin extends Plugin {
     }
 
     private int getProcessedID(boolean isFuzzy, int itemId) {
-        // use fuzzy mapping if needed
         if (isFuzzy) {
             return ItemVariationMapping.map(itemId);
         }
-
         return itemId;
     }
 }

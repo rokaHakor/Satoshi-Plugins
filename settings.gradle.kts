@@ -26,6 +26,7 @@
 rootProject.name = "Satoshi Plugins"
 
 include(":dropall")
+include(":tearcollector")
 include(":invsetupwithdrawer")
 
 for (project in rootProject.children) {
