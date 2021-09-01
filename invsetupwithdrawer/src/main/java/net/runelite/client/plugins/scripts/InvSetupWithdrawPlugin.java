@@ -100,7 +100,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
     @Subscribe
     private void onGameTick(final GameTick event) {
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
-        if (startWithdraw && inventory != null && itemContainerEmpty(inventory)) {
+        if (startWithdraw && itemContainerEmpty(inventory)) {
             if (skipTick < 1) {
                 skipTick++;
                 return;
@@ -139,7 +139,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         startWithdraw = true;
         withdraw.addAll(currentSetup);
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
-        if (inventory != null && !itemContainerEmpty(inventory)) {
+        if (!itemContainerEmpty(inventory)) {
             targetMenu = new MenuEntry("Deposit inventory", "", 1, MenuAction.CC_OP.getId(), -1, 786473, false);
             click();
         }
