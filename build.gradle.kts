@@ -111,16 +111,16 @@ subprojects {
             fileMode = 420
         }
 
-        withType<Jar> {
-            doLast {
-                val externalManagerDirectory: String = project.findProperty("externalManagerDirectory")?.toString()
-                    ?: System.getProperty("user.home") + "\\.openosrs\\plugins"
-                copy {
-                    from("./build/libs/")
-                    into(externalManagerDirectory)
-                }
-            }
-        }
+//        withType<Jar> {
+//            doLast {
+//                val externalManagerDirectory: String = project.findProperty("externalManagerDirectory")?.toString()
+//                    ?: System.getProperty("user.home") + "\\.openosrs\\plugins"
+//                copy {
+//                    from("./build/libs/")
+//                    into(externalManagerDirectory)
+//                }
+//            }
+//        }
 
         named<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask>("dependencyUpdates") {
             checkForGradleUpdate = false
