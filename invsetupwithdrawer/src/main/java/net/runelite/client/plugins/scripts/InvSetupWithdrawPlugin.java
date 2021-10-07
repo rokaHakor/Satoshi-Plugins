@@ -9,6 +9,7 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.queries.BankItemQuery;
 import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -196,7 +197,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
 
         if (onlyOneItemLeft(item)) {
             withdraw.clear();
-            targetMenu = new MenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), 786444, false);
+            targetMenu = new MenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
             click();
             return true;
         }
@@ -205,17 +206,17 @@ public class InvSetupWithdrawPlugin extends Plugin {
             if (item.getQuantity() == 2) {
                 withdraw.push(new InventorySetupsItem(item.getId(), item.getName(), 1, item.isFuzzy()));
                 targetMenu = new MenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
-                        bankItemWidget.getIndex(), 786444, false);
+                        bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
                 click();
                 return true;
             }
-            targetMenu = new MenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), 786444, false);
+            targetMenu = new MenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
             click();
             return true;
         }
 
         targetMenu = new MenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
-                bankItemWidget.getIndex(), 786444, false);
+                bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
         click();
         return true;
     }
