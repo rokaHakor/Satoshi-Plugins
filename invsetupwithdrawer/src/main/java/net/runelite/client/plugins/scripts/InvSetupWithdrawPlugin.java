@@ -141,7 +141,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         withdraw.addAll(currentSetup);
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
         if (!itemContainerEmpty(inventory)) {
-            targetMenu = new MenuEntry("Deposit inventory", "", 1, MenuAction.CC_OP.getId(), -1, 786473, false);
+            targetMenu = new MenuEntry("Deposit inventory", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.BANK_DEPOSIT_INVENTORY.getId(), false);
             click();
         }
     }
@@ -167,7 +167,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
 
         if (client.getItemComposition(item.getId()).getNote() == -1 && client.getVarbitValue(3958) == 1) {
             withdraw.push(new InventorySetupsItem(item.getId(), item.getName(), item.getQuantity(), item.isFuzzy()));
-            targetMenu = new MenuEntry("Item", "", 1, MenuAction.CC_OP.getId(), -1, 786453, false);
+            targetMenu = new MenuEntry("Item", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.PACK(12, 22), false);
             click();
             return true;
         }
@@ -175,7 +175,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         if (client.getItemComposition(item.getId()).getNote() == 799) {
             if (client.getVarbitValue(3958) == 0) {
                 withdraw.push(new InventorySetupsItem(item.getId(), item.getName(), item.getQuantity(), item.isFuzzy()));
-                targetMenu = new MenuEntry("Note", "", 1, MenuAction.CC_OP.getId(), -1, 786455, false);
+                targetMenu = new MenuEntry("Note", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.PACK(12, 24), false);
                 click();
                 return true;
             }
