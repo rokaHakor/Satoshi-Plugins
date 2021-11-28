@@ -8,9 +8,11 @@ import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.queries.BankItemQuery;
+import net.runelite.api.queries.InventoryWidgetItemQuery;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.api.widgets.WidgetItem;
+import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemVariationMapping;
@@ -51,10 +53,16 @@ public class InvSetupWithdrawPlugin extends Plugin {
     @Inject
     private KeyManager keyManager;
 
+    @Inject
+    private ChatMessageManager chatMessageManager;
+
     private final Random random = new Random();
     private boolean startWithdraw;
-    private boolean withdrawLoop;
+    private boolean equipItems;
+    private boolean inputLoop;
+    private boolean withdrawBoth;
     private final LinkedList<InventorySetupsItem> withdraw = new LinkedList<>();
+    private final LinkedList<InventorySetupsItem> equip = new LinkedList<>();
     private MenuEntry targetMenu;
     private long clickTimer;
 
@@ -67,6 +75,23 @@ public class InvSetupWithdrawPlugin extends Plugin {
         }
     };
 
+    private final HotkeyListener quickEquipmentHotkeyListener = new HotkeyListener(() -> config.withdrawEquipment()) {
+        @Override
+        public void hotkeyPressed() {
+            log.info("Starting Equipment Withdraw");
+            quickEquipmentSetup();
+        }
+    };
+
+    private final HotkeyListener quickBothHotkeyListener = new HotkeyListener(() -> config.withdrawAll()) {
+        @Override
+        public void hotkeyPressed() {
+            log.info("Starting Both Withdraw");
+            quickEquipmentSetup();
+            withdrawBoth = true;
+        }
+    };
+
     @Provides
     InvSetupWithdrawConfig getConfig(ConfigManager configManager) {
         return configManager.getConfig(InvSetupWithdrawConfig.class);
@@ -75,12 +100,24 @@ public class InvSetupWithdrawPlugin extends Plugin {
     @Override
     public void startUp() {
         withdraw.clear();
+        equip.clear();
         this.clickTimer = 0;
         this.startWithdraw = false;
-        this.withdrawLoop = false;
+        this.equipItems = false;
+        this.inputLoop = false;
+        this.withdrawBoth = false;
         this.targetMenu = null;
 
         keyManager.registerKeyListener(quickWithdrawHotkeyListener);
+        keyManager.registerKeyListener(quickEquipmentHotkeyListener);
+        keyManager.registerKeyListener(quickBothHotkeyListener);
+    }
+
+    @Override
+    protected void shutDown() {
+        keyManager.unregisterKeyListener(quickWithdrawHotkeyListener);
+        keyManager.unregisterKeyListener(quickEquipmentHotkeyListener);
+        keyManager.unregisterKeyListener(quickBothHotkeyListener);
     }
 
     @Subscribe
@@ -89,6 +126,11 @@ public class InvSetupWithdrawPlugin extends Plugin {
             event.setMenuEntry(targetMenu);
             if (startWithdraw) {
                 if (event.getMenuTarget().contains("Withdraw")) {
+                    clickTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
+                }
+            }
+            if (equipItems) {
+                if (event.getId() == 9) {
                     clickTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
                 }
             }
@@ -101,21 +143,34 @@ public class InvSetupWithdrawPlugin extends Plugin {
     @Subscribe
     private void onGameTick(final GameTick event) {
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
-        if (startWithdraw && itemContainerEmpty(inventory)) {
-            if (skipTick < 1) {
-                skipTick++;
-                return;
+        if (startWithdraw) {
+            if (itemContainerEmpty(inventory)) {
+                if (skipTick < 1) {
+                    skipTick++;
+                    return;
+                }
+                skipTick = 0;
+                inputLoop = true;
+                withdrawNext();
             }
-            skipTick = 0;
-            withdrawLoop = true;
-            withdrawNext();
+            return;
+        }
+        if (equipItems && !inputLoop) {
+            inputLoop = true;
+            equipNext();
         }
     }
 
     @Subscribe
     private void onClientTick(final ClientTick event) {
-        if (targetMenu == null && withdrawLoop && startWithdraw && clickTimer < System.currentTimeMillis()) {
-            withdrawNext();
+        if (targetMenu == null && inputLoop && clickTimer < System.currentTimeMillis()) {
+            if (startWithdraw) {
+                withdrawNext();
+                return;
+            }
+            if (equipItems) {
+                equipNext();
+            }
         }
     }
 
@@ -131,13 +186,33 @@ public class InvSetupWithdrawPlugin extends Plugin {
         return true;
     }
 
-    public void quickWithdrawSetup() {
-        ArrayList<InventorySetupsItem> currentSetup = ReflectionAgent.getCurrentSetup(this, pluginManager);
+    private void quickEquipmentSetup() {
+        ArrayList<InventorySetupsItem> equipmentSetup = ReflectionAgent.getEquipmentSetup(this, pluginManager, chatMessageManager);
+        if (client.getItemContainer(InventoryID.BANK) == null || equipmentSetup == null) {
+            return;
+        }
+        skipTick = 0;
+        startWithdraw = true;
+        equipItems = true;
+        addUnequipped(withdraw, equipmentSetup);
+        addUnequipped(equip, equipmentSetup);
+        ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
+        if (!itemContainerEmpty(inventory)) {
+            targetMenu = new MenuEntry("Deposit inventory", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.BANK_DEPOSIT_INVENTORY.getId(), false);
+            click();
+        }
+    }
+
+    private void quickWithdrawSetup() {
+        ArrayList<InventorySetupsItem> currentSetup = ReflectionAgent.getInventorySetup(this, pluginManager, chatMessageManager);
         if (client.getItemContainer(InventoryID.BANK) == null || currentSetup == null) {
             return;
         }
         skipTick = 0;
         startWithdraw = true;
+        equipItems = false;
+        withdraw.clear();
+        equip.clear();
         withdraw.addAll(currentSetup);
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
         if (!itemContainerEmpty(inventory)) {
@@ -146,17 +221,57 @@ public class InvSetupWithdrawPlugin extends Plugin {
         }
     }
 
+    private boolean equipNext() {
+        if (client.getItemContainer(InventoryID.BANK) == null) {
+            equipItems = false;
+            inputLoop = false;
+            equip.clear();
+            return false;
+        }
+
+        if (equip.isEmpty()) {
+            equipItems = false;
+            inputLoop = false;
+            if (withdrawBoth) {
+                withdrawBoth = false;
+                quickWithdrawSetup();
+            }
+            return false;
+        }
+
+        final InventorySetupsItem item = equip.pop();
+        if (item.getId() == -1) {
+            return equipNext();
+        }
+
+        Widget inventoryItemWidget = getInventoryItemWidget(item.getId());
+        if (item.isFuzzy()) {
+            WidgetItem inventoryItem = new InventoryWidgetItemQuery().filter(s -> getProcessedID(true, s.getId()) == getProcessedID(true, item.getId())).result(client).first();
+            if (inventoryItem != null) {
+                inventoryItemWidget = inventoryItem.getWidget();
+            }
+        }
+        if (inventoryItemWidget == null) {
+            return equipNext();
+        }
+
+        targetMenu = new MenuEntry("Wear", "Wear", 9, MenuAction.CC_OP_LOW_PRIORITY.getId(),
+                inventoryItemWidget.getIndex(), WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getId(), false);
+        click();
+        return true;
+    }
+
     private boolean withdrawNext() {
         if (client.getItemContainer(InventoryID.BANK) == null) {
             startWithdraw = false;
-            withdrawLoop = false;
+            inputLoop = false;
             withdraw.clear();
             return false;
         }
 
         if (withdraw.isEmpty()) {
             startWithdraw = false;
-            withdrawLoop = false;
+            inputLoop = false;
             return false;
         }
 
@@ -253,6 +368,32 @@ public class InvSetupWithdrawPlugin extends Plugin {
         client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 500, System.currentTimeMillis(), 0, pos.getX(), pos.getY(), 1, false, 1));
     }
 
+    private void addUnequipped(LinkedList<InventorySetupsItem> queue, ArrayList<InventorySetupsItem> setup) {
+        queue.clear();
+        ItemContainer equipped = client.getItemContainer(InventoryID.EQUIPMENT);
+        for (InventorySetupsItem item : setup) {
+            if (item.getId() == -1) {
+                continue;
+            }
+            if (itemContainerContainsItem(equipped, item)) {
+                continue;
+            }
+            queue.add(item);
+        }
+    }
+
+    private boolean itemContainerContainsItem(ItemContainer container, InventorySetupsItem setupItem) {
+        if (container == null) {
+            return false;
+        }
+        for (Item item : container.getItems()) {
+            if (getProcessedID(setupItem.isFuzzy(), setupItem.getId()) == getProcessedID(setupItem.isFuzzy(), item.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isOpen() {
         return client.getItemContainer(InventoryID.BANK) != null;
     }
@@ -265,6 +406,19 @@ public class InvSetupWithdrawPlugin extends Plugin {
         WidgetItem bankItem = new BankItemQuery().idEquals(id).result(client).first();
         if (bankItem != null) {
             return bankItem.getWidget();
+        } else {
+            return null;
+        }
+    }
+
+    private Widget getInventoryItemWidget(int id) {
+        if (!isOpen()) {
+            return null;
+        }
+
+        WidgetItem inventoryItem = new InventoryWidgetItemQuery().idEquals(id).result(client).first();
+        if (inventoryItem != null) {
+            return inventoryItem.getWidget();
         } else {
             return null;
         }

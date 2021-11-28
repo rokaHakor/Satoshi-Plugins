@@ -10,7 +10,7 @@ public interface InvSetupWithdrawConfig extends Config {
 
     @ConfigItem(
             keyName = "withdrawSetupHotkey",
-            name = "Withdraw Items for Inventory Setup Hotkey",
+            name = "Withdraw Inventory Setup Hotkey",
             description = "Configures the hotkey for quick withdraw",
             position = 1
     )
@@ -19,7 +19,27 @@ public interface InvSetupWithdrawConfig extends Config {
     }
 
     @ConfigItem(
-            position = 2,
+            keyName = "withdrawEquipmentHotkey",
+            name = "Withdraw Equipment Setup Hotkey",
+            description = "Configures the hotkey for equipment quick withdraw",
+            position = 2
+    )
+    default Keybind withdrawEquipment() {
+        return Keybind.NOT_SET;
+    }
+
+    @ConfigItem(
+            keyName = "withdrawBothHotkey",
+            name = "Withdraw Both Setup Hotkey",
+            description = "Configures the hotkey for both quick withdraw",
+            position = 3
+    )
+    default Keybind withdrawAll() {
+        return Keybind.NOT_SET;
+    }
+
+    @ConfigItem(
+            position = 4,
             keyName = "withdrawSpeed",
             name = "Withdraw Speed",
             description = "How fast to withdraw items"
