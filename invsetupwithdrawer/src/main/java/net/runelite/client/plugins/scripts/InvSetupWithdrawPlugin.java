@@ -138,18 +138,11 @@ public class InvSetupWithdrawPlugin extends Plugin {
         }
     }
 
-    private int skipTick = 0;
-
     @Subscribe
     private void onGameTick(final GameTick event) {
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
         if (startWithdraw) {
             if (itemContainerEmpty(inventory)) {
-                if (skipTick < 1) {
-                    skipTick++;
-                    return;
-                }
-                skipTick = 0;
                 inputLoop = true;
                 withdrawNext();
             }
@@ -191,11 +184,15 @@ public class InvSetupWithdrawPlugin extends Plugin {
         if (client.getItemContainer(InventoryID.BANK) == null || equipmentSetup == null) {
             return;
         }
-        skipTick = 0;
         startWithdraw = true;
         equipItems = true;
         addUnequipped(withdraw, equipmentSetup);
         addUnequipped(equip, equipmentSetup);
+        if (equip.isEmpty() && withdraw.isEmpty()) {
+            withdrawBoth = false;
+            quickWithdrawSetup();
+            return;
+        }
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
         if (!itemContainerEmpty(inventory)) {
             targetMenu = new MenuEntry("Deposit inventory", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.BANK_DEPOSIT_INVENTORY.getId(), false);
@@ -208,7 +205,6 @@ public class InvSetupWithdrawPlugin extends Plugin {
         if (client.getItemContainer(InventoryID.BANK) == null || currentSetup == null) {
             return;
         }
-        skipTick = 0;
         startWithdraw = true;
         equipItems = false;
         withdraw.clear();
