@@ -195,7 +195,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         }
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
         if (!itemContainerEmpty(inventory)) {
-            targetMenu = new MenuEntry("Deposit inventory", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.BANK_DEPOSIT_INVENTORY.getId(), false);
+            targetMenu = new NewMenuEntry("Deposit inventory", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.BANK_DEPOSIT_INVENTORY.getId(), false);
             click();
         }
     }
@@ -212,7 +212,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         withdraw.addAll(currentSetup);
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
         if (!itemContainerEmpty(inventory)) {
-            targetMenu = new MenuEntry("Deposit inventory", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.BANK_DEPOSIT_INVENTORY.getId(), false);
+            targetMenu = new NewMenuEntry("Deposit inventory", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.BANK_DEPOSIT_INVENTORY.getId(), false);
             click();
         }
     }
@@ -251,7 +251,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
             return equipNext();
         }
 
-        targetMenu = new MenuEntry("Wear", "Wear", 9, MenuAction.CC_OP_LOW_PRIORITY.getId(),
+        targetMenu = new NewMenuEntry("Wear", "Wear", 9, MenuAction.CC_OP_LOW_PRIORITY.getId(),
                 inventoryItemWidget.getIndex(), WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getId(), false);
         click();
         return true;
@@ -278,7 +278,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
 
         if (client.getItemComposition(item.getId()).getNote() == -1 && client.getVarbitValue(3958) == 1) {
             withdraw.push(new InventorySetupsItem(item.getId(), item.getName(), item.getQuantity(), item.isFuzzy()));
-            targetMenu = new MenuEntry("Item", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.PACK(12, 22), false);
+            targetMenu = new NewMenuEntry("Item", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.PACK(12, 22), false);
             click();
             return true;
         }
@@ -286,7 +286,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         if (client.getItemComposition(item.getId()).getNote() == 799) {
             if (client.getVarbitValue(3958) == 0) {
                 withdraw.push(new InventorySetupsItem(item.getId(), item.getName(), item.getQuantity(), item.isFuzzy()));
-                targetMenu = new MenuEntry("Note", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.PACK(12, 24), false);
+                targetMenu = new NewMenuEntry("Note", "", 1, MenuAction.CC_OP.getId(), -1, WidgetInfo.PACK(12, 24), false);
                 click();
                 return true;
             }
@@ -308,7 +308,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
 
         if (onlyOneItemLeft(item)) {
             withdraw.clear();
-            targetMenu = new MenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
+            targetMenu = new NewMenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
             click();
             return true;
         }
@@ -316,17 +316,17 @@ public class InvSetupWithdrawPlugin extends Plugin {
         if (item.getQuantity() > 1) {
             if (item.getQuantity() == 2) {
                 withdraw.push(new InventorySetupsItem(item.getId(), item.getName(), 1, item.isFuzzy()));
-                targetMenu = new MenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
+                targetMenu = new NewMenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
                         bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
                 click();
                 return true;
             }
-            targetMenu = new MenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
+            targetMenu = new NewMenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
             click();
             return true;
         }
 
-        targetMenu = new MenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
+        targetMenu = new NewMenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
                 bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
         click();
         return true;

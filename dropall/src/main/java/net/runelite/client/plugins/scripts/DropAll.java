@@ -94,7 +94,7 @@ public class DropAll extends Plugin {
             WidgetItem drop = dropItems.pop();
             if (drop != null) {
                 dropTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
-                event.setMenuEntry(new MenuEntry("Drop", "Drop", drop.getId(), MenuAction.ITEM_FIFTH_OPTION.getId(), drop.getIndex(), WidgetInfo.INVENTORY.getId(), false));
+                event.setMenuEntry(new NewMenuEntry("Drop", "Drop", drop.getId(), MenuAction.ITEM_FIFTH_OPTION.getId(), drop.getIndex(), WidgetInfo.INVENTORY.getId(), false));
                 clicked = false;
             }
         }
@@ -134,12 +134,12 @@ public class DropAll extends Plugin {
                         newMenu = event.getMenuEntries()[x];
                     }
                 } else if (x == 2) {
-                    newMenu = new MenuEntry();
+                    newMenu = new NewMenuEntry();
                     newMenu.setOption(DROP_ALL);
                     newMenu.setTarget(ColorUtil.prependColorTag(client.getItemComposition(itemId).getName(), new Color(255, 144, 64)));
                     newMenu.setIdentifier(itemId);
                     newMenu.setParam1(widgetId);
-                    newMenu.setType(MenuAction.RUNELITE.getId());
+                    newMenu.setType(MenuAction.RUNELITE);
                 } else {
                     if (event.getMenuEntries()[x - 1].getOption().equals("Drop")) {
                         hasDrop = true;
