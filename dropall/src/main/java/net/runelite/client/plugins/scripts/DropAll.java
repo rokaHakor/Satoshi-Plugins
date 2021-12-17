@@ -117,39 +117,29 @@ public class DropAll extends Plugin {
             if (itemId == -1) {
                 return;
             }
-
-            MenuEntry[] menuList = new MenuEntry[event.getMenuEntries().length + 1];
-            int num = 0;
+            MenuEntry[] menuEntries = client.getMenuEntries();
+            MenuEntry[] newEntries = Arrays.copyOf(menuEntries, menuEntries.length - 1);
+            int index = 0;
             boolean hasDrop = false;
-
-            // preserve the 'Cancel' option as the client will reuse the first entry for Cancel and only resets option/action
-            menuList[num++] = event.getMenuEntries()[0];
-
-            for (int x = 1; x < event.getMenuEntries().length + 1; x++) {
-                final MenuEntry newMenu;
-                if (x == 1) {
-                    if (event.getMenuEntries()[x].getOption().equals("Examine") && config.removeExamine()) {
-                        newMenu = null;
-                    } else {
-                        newMenu = event.getMenuEntries()[x];
-                    }
-                } else if (x == 2) {
-                    newMenu = new NewMenuEntry();
-                    newMenu.setOption(DROP_ALL);
-                    newMenu.setTarget(ColorUtil.prependColorTag(client.getItemComposition(itemId).getName(), new Color(255, 144, 64)));
-                    newMenu.setIdentifier(itemId);
-                    newMenu.setParam1(widgetId);
-                    newMenu.setType(MenuAction.RUNELITE);
-                } else {
-                    if (event.getMenuEntries()[x - 1].getOption().equals("Drop")) {
-                        hasDrop = true;
-                    }
-                    newMenu = event.getMenuEntries()[x - 1];
+            for (MenuEntry entry : menuEntries) {
+                if (!entry.getOption().equals("Examine")) {
+                    newEntries[index] = entry;
+                    index++;
                 }
-                menuList[num++] = newMenu;
+                if (entry.getOption().equals("Drop")) {
+                    hasDrop = true;
+                }
+            }
+            if (config.removeExamine()) {
+                client.setMenuEntries(newEntries);
             }
             if (hasDrop) {
-                client.setMenuEntries(menuList);
+                client.createMenuEntry(config.removeExamine() ? 1 : 2).setOption(DROP_ALL)
+                        .setTarget(ColorUtil.prependColorTag(client.getItemComposition(itemId).getName(), new Color(255, 144, 64)))
+                        .setIdentifier(itemId)
+                        .setParam1(0)
+                        .setParam1(widgetId)
+                        .setType(MenuAction.RUNELITE);
             }
             return;
         }

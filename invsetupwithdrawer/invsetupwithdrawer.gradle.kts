@@ -1,4 +1,4 @@
-version = "1.0.4"
+version = "1.0.5"
 
 project.extra["PluginName"] = "Inv Setup Withdrawer"
 project.extra["PluginDescription"] = "Withdraw inventory setups for specific activities, use with Plugin-hub Inventory Setups"
