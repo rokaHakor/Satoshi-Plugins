@@ -7,6 +7,8 @@ import net.runelite.client.config.Keybind;
 
 @ConfigGroup("invWithdrawer")
 public interface InvSetupWithdrawConfig extends Config {
+    String OPEN_SETUP = "openSetup";
+    String WITHDRAW_TYPE = "withdrawType";
 
     @ConfigItem(
             keyName = "withdrawSetupHotkey",
@@ -39,7 +41,17 @@ public interface InvSetupWithdrawConfig extends Config {
     }
 
     @ConfigItem(
-            position = 4,
+            keyName = "closeAfterWithdraw",
+            name = "Close After Withdraw",
+            description = "Closes the setup after withdrawing",
+            position = 4
+    )
+    default boolean closeAfterWithdraw() {
+        return false;
+    }
+
+    @ConfigItem(
+            position = 5,
             keyName = "withdrawSpeed",
             name = "Withdraw Speed",
             description = "How fast to withdraw items"

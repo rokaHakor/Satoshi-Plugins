@@ -12,12 +12,13 @@ import net.runelite.client.plugins.PluginManager;
 
 import javax.swing.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 @Slf4j
 public class ReflectionAgent {
 
-    public static Object getCurrentSetup(Plugin withdrawer, PluginManager pluginManager, ChatMessageManager chatMessageManager) {
+    public static Plugin getInventorySetupPlugin(Plugin withdrawer, PluginManager pluginManager, ChatMessageManager chatMessageManager) {
         try {
             Plugin inventorySetupsPlugin = null;
 
@@ -51,11 +52,96 @@ public class ReflectionAgent {
                 return null;
             }
 
+            return inventorySetupsPlugin;
+        } catch (Throwable e) {
+            log.info("Error: ", e);
+        }
+        return null;
+    }
+
+    public static Object getSetupPanel(Plugin inventorySetupsPlugin) {
+        try {
             Field privateField = inventorySetupsPlugin.getClass().getDeclaredField("panel");
             privateField.setAccessible(true);
-            Object panel = privateField.get(inventorySetupsPlugin);
+            return privateField.get(inventorySetupsPlugin);
+        } catch (Throwable e) {
+            log.info("Error: ", e);
+        }
+        return null;
+    }
 
-            privateField = panel.getClass().getDeclaredField("currentSelectedSetup");
+    public static void openInventorySetup(Plugin withdrawer, PluginManager pluginManager, ChatMessageManager chatMessageManager, String setupName) {
+        try {
+            Plugin inventorySetupsPlugin = getInventorySetupPlugin(withdrawer, pluginManager, chatMessageManager);
+
+            if (inventorySetupsPlugin == null) {
+                return;
+            }
+
+            Field privateField = inventorySetupsPlugin.getClass().getDeclaredField("inventorySetups");
+            privateField.setAccessible(true);
+            ArrayList<Object> setups = (ArrayList<Object>) privateField.get(inventorySetupsPlugin);
+
+            Object setup = null;
+            for (Object obj : setups) {
+                Field nameField = obj.getClass().getDeclaredField("name");
+                nameField.setAccessible(true);
+                String name = (String) nameField.get(obj);
+                if (setupName.equals(name)) {
+                    setup = obj;
+                    break;
+                }
+            }
+
+            if (setup == null) {
+                String chatMessage = new ChatMessageBuilder()
+                        .append(ChatColorType.HIGHLIGHT)
+                        .append(setupName + " Inventory Setup not found")
+                        .build();
+
+                chatMessageManager.queue(QueuedMessage.builder()
+                        .type(ChatMessageType.CONSOLE)
+                        .runeLiteFormattedMessage(chatMessage)
+                        .build());
+                log.info(setupName + " Inventory Setup not found");
+                return;
+            }
+
+            Object panel = getSetupPanel(inventorySetupsPlugin);
+            if (panel == null) {
+                return;
+            }
+
+            Method clearCurrentSetup = panel.getClass().getMethod("setCurrentInventorySetup", setup.getClass(), boolean.class);
+            clearCurrentSetup.invoke(panel, setup, false);
+        } catch (Throwable e) {
+            log.info("Error: ", e);
+        }
+    }
+
+    public static void closeCurrentSetup(Plugin withdrawer, PluginManager pluginManager, ChatMessageManager chatMessageManager) {
+        try {
+            Plugin inventorySetupsPlugin = getInventorySetupPlugin(withdrawer, pluginManager, chatMessageManager);
+
+            if (inventorySetupsPlugin == null) {
+                return;
+            }
+
+            Object panel = getSetupPanel(inventorySetupsPlugin);
+            if (panel == null) {
+                return;
+            }
+
+            Method clearCurrentSetup = panel.getClass().getMethod("returnToOverviewPanel", boolean.class);
+            clearCurrentSetup.invoke(panel, false);
+        } catch (Throwable e) {
+            log.info("Error: ", e);
+        }
+    }
+
+    public static Object getCurrentSetup(Object panel, ChatMessageManager chatMessageManager) {
+        try {
+            Field privateField = panel.getClass().getDeclaredField("currentSelectedSetup");
             privateField.setAccessible(true);
             Object inventorySetup = privateField.get(panel);
 
@@ -80,78 +166,55 @@ public class ReflectionAgent {
         return null;
     }
 
-    public static ArrayList<InventorySetupsItem> getInventorySetup(Plugin withdrawer, PluginManager pluginManager, ChatMessageManager chatMessageManager) {
-        ArrayList<InventorySetupsItem> currentSetup = new ArrayList<>();
-        try {
-            Object inventorySetup = getCurrentSetup(withdrawer, pluginManager, chatMessageManager);
+    private static ArrayList<InventorySetupsItem> getInventorySetupItems(ArrayList<InventorySetupsItem> currentSetup, Object inventorySetup, Field privateField) throws IllegalAccessException, NoSuchFieldException {
+        ArrayList<Object> array = (ArrayList<Object>) privateField.get(inventorySetup);
 
-            if (inventorySetup == null) {
-                return null;
-            }
-
-            Field privateField = inventorySetup.getClass().getDeclaredField("inventory");
+        for (Object obj : array) {
+            privateField = obj.getClass().getDeclaredField("id");
             privateField.setAccessible(true);
-            ArrayList<Object> array = (ArrayList<Object>) privateField.get(inventorySetup);
+            int id = (int) privateField.get(obj);
 
-            for (Object obj : array) {
-                privateField = obj.getClass().getDeclaredField("id");
-                privateField.setAccessible(true);
-                int id = (int) privateField.get(obj);
+            privateField = obj.getClass().getDeclaredField("name");
+            privateField.setAccessible(true);
+            String name = (String) privateField.get(obj);
 
-                privateField = obj.getClass().getDeclaredField("name");
-                privateField.setAccessible(true);
-                String name = (String) privateField.get(obj);
+            privateField = obj.getClass().getDeclaredField("quantity");
+            privateField.setAccessible(true);
+            int quantity = (int) privateField.get(obj);
 
-                privateField = obj.getClass().getDeclaredField("quantity");
-                privateField.setAccessible(true);
-                int quantity = (int) privateField.get(obj);
+            privateField = obj.getClass().getDeclaredField("fuzzy");
+            privateField.setAccessible(true);
+            boolean fuzzy = (boolean) privateField.get(obj);
 
-                privateField = obj.getClass().getDeclaredField("fuzzy");
-                privateField.setAccessible(true);
-                boolean fuzzy = (boolean) privateField.get(obj);
-
-                currentSetup.add(new InventorySetupsItem(id, name, quantity, fuzzy));
-            }
-            return currentSetup;
-        } catch (Throwable e) {
-            log.info("Error: ", e);
+            currentSetup.add(new InventorySetupsItem(id, name, quantity, fuzzy));
         }
-        return null;
+        return currentSetup;
     }
 
-    public static ArrayList<InventorySetupsItem> getEquipmentSetup(Plugin withdrawer, PluginManager pluginManager, ChatMessageManager chatMessageManager) {
+    public static ArrayList<InventorySetupsItem> getInventorySetup(Plugin withdrawer, PluginManager pluginManager, ChatMessageManager chatMessageManager, Setup setup) {
         ArrayList<InventorySetupsItem> currentSetup = new ArrayList<>();
         try {
-            Object inventorySetup = getCurrentSetup(withdrawer, pluginManager, chatMessageManager);
+            Plugin inventorySetupsPlugin = getInventorySetupPlugin(withdrawer, pluginManager, chatMessageManager);
+
+            if (inventorySetupsPlugin == null) {
+                return null;
+            }
+
+            Object panel = getSetupPanel(inventorySetupsPlugin);
+
+            if (panel == null) {
+                return null;
+            }
+
+            Object inventorySetup = getCurrentSetup(panel, chatMessageManager);
 
             if (inventorySetup == null) {
                 return null;
             }
 
-            Field privateField = inventorySetup.getClass().getDeclaredField("equipment");
+            Field privateField = inventorySetup.getClass().getDeclaredField(setup.getName());
             privateField.setAccessible(true);
-            ArrayList<Object> array = (ArrayList<Object>) privateField.get(inventorySetup);
-
-            for (Object obj : array) {
-                privateField = obj.getClass().getDeclaredField("id");
-                privateField.setAccessible(true);
-                int id = (int) privateField.get(obj);
-
-                privateField = obj.getClass().getDeclaredField("name");
-                privateField.setAccessible(true);
-                String name = (String) privateField.get(obj);
-
-                privateField = obj.getClass().getDeclaredField("quantity");
-                privateField.setAccessible(true);
-                int quantity = (int) privateField.get(obj);
-
-                privateField = obj.getClass().getDeclaredField("fuzzy");
-                privateField.setAccessible(true);
-                boolean fuzzy = (boolean) privateField.get(obj);
-
-                currentSetup.add(new InventorySetupsItem(id, name, quantity, fuzzy));
-            }
-            return currentSetup;
+            return getInventorySetupItems(currentSetup, inventorySetup, privateField);
         } catch (Throwable e) {
             log.info("Error: ", e);
         }

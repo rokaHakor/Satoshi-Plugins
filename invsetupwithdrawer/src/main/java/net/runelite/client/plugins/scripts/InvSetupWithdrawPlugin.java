@@ -4,6 +4,7 @@ import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Point;
 import net.runelite.api.*;
+import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.MenuOptionClicked;
@@ -15,6 +16,7 @@ import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemVariationMapping;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
@@ -71,6 +73,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         @Override
         public void hotkeyPressed() {
             log.info("Starting Quick Withdraw");
+            withdrawBoth = false;
             quickWithdrawSetup();
         }
     };
@@ -79,6 +82,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         @Override
         public void hotkeyPressed() {
             log.info("Starting Equipment Withdraw");
+            withdrawBoth = false;
             quickEquipmentSetup();
         }
     };
@@ -87,8 +91,8 @@ public class InvSetupWithdrawPlugin extends Plugin {
         @Override
         public void hotkeyPressed() {
             log.info("Starting Both Withdraw");
-            quickEquipmentSetup();
             withdrawBoth = true;
+            quickEquipmentSetup();
         }
     };
 
@@ -118,6 +122,47 @@ public class InvSetupWithdrawPlugin extends Plugin {
         keyManager.unregisterKeyListener(quickWithdrawHotkeyListener);
         keyManager.unregisterKeyListener(quickEquipmentHotkeyListener);
         keyManager.unregisterKeyListener(quickBothHotkeyListener);
+    }
+
+    @Subscribe
+    private void onConfigChanged(ConfigChanged event) {
+        if (!event.getGroup().equals("invWithdrawer")) return;
+        if (event.getKey().equals(InvSetupWithdrawConfig.OPEN_SETUP)) {
+            String setupName = configManager.getConfiguration("invWithdrawer", InvSetupWithdrawConfig.OPEN_SETUP);
+            if (setupName == null || setupName.equals("null")) {
+                return;
+            }
+            if (!setupName.equals("")) {
+                ReflectionAgent.openInventorySetup(this, pluginManager, chatMessageManager, setupName);
+                configManager.setConfiguration("invWithdrawer", InvSetupWithdrawConfig.OPEN_SETUP, "null");
+                return;
+            }
+            ReflectionAgent.closeCurrentSetup(this, pluginManager, chatMessageManager);
+            configManager.setConfiguration("invWithdrawer", InvSetupWithdrawConfig.OPEN_SETUP, "null");
+            return;
+        }
+        if (event.getKey().equals(InvSetupWithdrawConfig.WITHDRAW_TYPE)) {
+            String withdrawType = configManager.getConfiguration("invWithdrawer", InvSetupWithdrawConfig.WITHDRAW_TYPE);
+            if (withdrawType == null || withdrawType.equals("null")) {
+                return;
+            }
+            if (withdrawType.equals("Inventory")) {
+                log.info("Starting Quick Withdraw");
+                withdrawBoth = false;
+                quickWithdrawSetup();
+            }
+            if (withdrawType.equals("Equipment")) {
+                log.info("Starting Equipment Withdraw");
+                withdrawBoth = false;
+                quickEquipmentSetup();
+            }
+            if (withdrawType.equals("Both")) {
+                log.info("Starting Both Withdraw");
+                withdrawBoth = true;
+                quickEquipmentSetup();
+            }
+            configManager.setConfiguration("invWithdrawer", InvSetupWithdrawConfig.WITHDRAW_TYPE, "null");
+        }
     }
 
     @Subscribe
@@ -180,7 +225,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
     }
 
     private void quickEquipmentSetup() {
-        ArrayList<InventorySetupsItem> equipmentSetup = ReflectionAgent.getEquipmentSetup(this, pluginManager, chatMessageManager);
+        ArrayList<InventorySetupsItem> equipmentSetup = ReflectionAgent.getInventorySetup(this, pluginManager, chatMessageManager, Setup.EQUIPMENT);
         if (client.getItemContainer(InventoryID.BANK) == null || equipmentSetup == null) {
             return;
         }
@@ -201,7 +246,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
     }
 
     private void quickWithdrawSetup() {
-        ArrayList<InventorySetupsItem> currentSetup = ReflectionAgent.getInventorySetup(this, pluginManager, chatMessageManager);
+        ArrayList<InventorySetupsItem> currentSetup = ReflectionAgent.getInventorySetup(this, pluginManager, chatMessageManager, Setup.INVENTORY);
         if (client.getItemContainer(InventoryID.BANK) == null || currentSetup == null) {
             return;
         }
@@ -268,6 +313,9 @@ public class InvSetupWithdrawPlugin extends Plugin {
         if (withdraw.isEmpty()) {
             startWithdraw = false;
             inputLoop = false;
+            if (!withdrawBoth && config.closeAfterWithdraw()) {
+                ReflectionAgent.closeCurrentSetup(this, pluginManager, chatMessageManager);
+            }
             return false;
         }
 
