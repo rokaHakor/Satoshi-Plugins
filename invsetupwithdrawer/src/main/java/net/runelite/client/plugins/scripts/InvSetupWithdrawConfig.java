@@ -53,11 +53,11 @@ public interface InvSetupWithdrawConfig extends Config {
 
     @ConfigItem(
             keyName = "withdrawExact",
-            name = "Withdraw Exact Count",
-            description = "Withdraws the exact count for stackable items",
+            name = "Use Withdraw X",
+            description = "Enables the use of withdraw X to withdraw exact stack amounts",
             position = 5
     )
-    default boolean withdrawExactCount() {
+    default boolean withdrawXEnabled() {
         return false;
     }
 

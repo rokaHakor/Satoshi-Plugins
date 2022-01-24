@@ -69,11 +69,12 @@ public class InvSetupWithdrawPlugin extends Plugin {
     private boolean withdrawBoth;
     private boolean active;
     private boolean closeFinalWidget;
+    private boolean closeWidget;
     private final LinkedList<InventorySetupsItem> withdraw = new LinkedList<>();
     private final LinkedList<InventorySetupsItem> equip = new LinkedList<>();
     private MenuEntry targetMenu;
     private long clickTimer;
-    private int withdrawX;
+    private int currentWithdrawX;
 
 
     private final HotkeyListener quickWithdrawHotkeyListener = new HotkeyListener(() -> config.withdrawSetup()) {
@@ -113,7 +114,8 @@ public class InvSetupWithdrawPlugin extends Plugin {
         withdraw.clear();
         equip.clear();
         this.clickTimer = 0;
-        this.withdrawX = 0;
+        this.currentWithdrawX = 0;
+        this.closeWidget = false;
         this.startWithdraw = false;
         this.equipItems = false;
         this.inputLoop = false;
@@ -179,43 +181,40 @@ public class InvSetupWithdrawPlugin extends Plugin {
     @Subscribe
     private void onVarClientIntChanged(VarClientIntChanged event) {
         int index = event.getIndex();
-        if (index == VarClientInt.INPUT_TYPE.getIndex() && client.getVar(VarClientInt.INPUT_TYPE) == 7 && startWithdraw || closeFinalWidget) {
-            final int finalWithdrawX = withdrawX;
-            clientThread.invokeLater(() -> {
-                client.setVar(VarClientStr.INPUT_TEXT, "" + finalWithdrawX);
-                client.runScript(112, 84, 0, "");
-                client.runScript(112, -1, 10, "");
-            });
-            withdrawX = 0;
+        if (index == VarClientInt.INPUT_TYPE.getIndex() && client.getVar(VarClientInt.INPUT_TYPE) == 7 && (startWithdraw || closeFinalWidget)) {
+            if (closeWidget) {
+                //log.info("Clearing input dialogue");
+                clientThread.invokeLater(() -> client.runScript(138));
+            }
         }
     }
 
     @Subscribe
     public void onMenuOptionClicked(MenuOptionClicked event) {
         if (targetMenu != null) {
-            log.info("Target Menu: {}, {}, {}, {}, {}, {}", targetMenu.getOption(), targetMenu.getTarget(), targetMenu.getIdentifier(), targetMenu.getType().getId(), targetMenu.getParam0(), targetMenu.getParam1());
+            //log.info("Target Menu: {}, {}, {}, {}, {}, {}", targetMenu.getOption(), targetMenu.getTarget(), targetMenu.getIdentifier(), targetMenu.getType().getId(), targetMenu.getParam0(), targetMenu.getParam1());
             event.setMenuEntry(targetMenu);
-            if (startWithdraw) {
-                if (event.getMenuTarget().contains("Withdraw")) {
-                    clickTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
-                    if (event.getId() == 6) {
-                        client.runScript(108, "Enter amount:");
-                    }
-                }
-            }
-            if (equipItems) {
-                if (event.getId() == 9) {
-                    clickTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
-                }
+            if (event.getMenuOption().equals("Cancel")) {
+                event.consume();
             }
             targetMenu = null;
+        }
+        if (startWithdraw) {
+            if (event.getMenuTarget().contains("Withdraw") && event.getParam1() == WidgetInfo.BANK_ITEM_CONTAINER.getId()) {
+                clickTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
+            }
+        }
+        if (equipItems) {
+            if (event.getId() == 9 && event.getParam1() == WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getId()) {
+                clickTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
+            }
         }
     }
 
     @Subscribe
     private void onGameTick(final GameTick event) {
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
-        if (startWithdraw) {
+        if (startWithdraw && !inputLoop) {
             if (itemContainerEmpty(inventory)) {
                 inputLoop = true;
                 withdrawNext();
@@ -245,6 +244,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         }
         if (active && !startWithdraw && !equipItems) {
             active = false;
+            currentWithdrawX = 0;
             log.info("Inv Withdraw Finished");
             configManager.setConfiguration("invWithdrawer", InvSetupWithdrawConfig.WITHDRAWING, false);
             closeFinalWidget = true;
@@ -407,87 +407,89 @@ public class InvSetupWithdrawPlugin extends Plugin {
         }
 
         if (item.getQuantity() > 1) {
-            if (config.withdrawExactCount()) {
-                if (item.getQuantity() >= bankItemWidget.getItemQuantity()) {
-                    targetMenu = new NewMenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
-                    click();
-                    return true;
-                }
-                if (shouldWithdrawX(item.getQuantity())) {
-                    int currentWithdrawX = client.getVarbitValue(3960);
+            if (item.getQuantity() >= bankItemWidget.getItemQuantity()) {
+                targetMenu = new NewMenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
+                click();
+                return true;
+            }
+            if (shouldWithdrawX(item.getQuantity())) {
+                if (config.withdrawXEnabled()) {
                     if (currentWithdrawX == item.getQuantity()) {
+                        log.info("Doing Withdraw-" + currentWithdrawX);
                         targetMenu = new NewMenuEntry("Withdraw-" + currentWithdrawX, "Withdraw-" + currentWithdrawX, 5, MenuAction.CC_OP.getId(),
                                 bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
                         click();
                         return true;
                     }
-                    withdrawX = item.getQuantity();
-                    targetMenu = new NewMenuEntry("Withdraw-X", "Withdraw-X", 6, MenuAction.CC_OP_LOW_PRIORITY.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
-                    click();
+                    setWithdrawX(bankItemWidget, item.getQuantity());
                     return true;
                 }
-                int withdrawCount = getWithdrawCount(item.getQuantity());
-                int withdrawId = getIdFromCount(withdrawCount);
-                if (item.getQuantity() > withdrawCount) {
-                    withdraw.push(new InventorySetupsItem(item.getId(), item.getName(), (item.getQuantity() - withdrawCount), item.isFuzzy()));
-                }
-                targetMenu = new NewMenuEntry("Withdraw-" + withdrawCount, "Withdraw-" + withdrawCount, withdrawId, MenuAction.CC_OP.getId(),
-                        bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
-                click();
-                return true;
-            }
-            if (item.getQuantity() == 2) {
-                withdraw.push(new InventorySetupsItem(item.getId(), item.getName(), 1, item.isFuzzy()));
-                targetMenu = new NewMenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
-                        bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
-                click();
-                return true;
-            }
-            targetMenu = new NewMenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
-            click();
-            return true;
-        }
-
-        if (config.withdrawExactCount()) {
-            int itemCount = getCount(item);
-            if (itemCount == 1) {
-                targetMenu = new NewMenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
-                        bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
-                click();
-                return true;
-            }
-            if (itemCount >= bankItemWidget.getItemQuantity()) {
                 targetMenu = new NewMenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
                 click();
                 return true;
             }
-            if (shouldWithdrawX(itemCount)) {
-                int currentWithdrawX = client.getVarbitValue(3960);
-                if (currentWithdrawX == itemCount) {
-                    targetMenu = new NewMenuEntry("Withdraw-" + currentWithdrawX, "Withdraw-" + currentWithdrawX, 5, MenuAction.CC_OP.getId(),
-                            bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
-                    click();
-                    return true;
-                }
-                withdrawX = itemCount;
-                targetMenu = new NewMenuEntry("Withdraw-X", "Withdraw-X", 6, MenuAction.CC_OP_LOW_PRIORITY.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
-                click();
-                return true;
-            }
-            int withdrawCount = getWithdrawCount(itemCount);
+            int withdrawCount = getWithdrawCount(item.getQuantity());
             int withdrawId = getIdFromCount(withdrawCount);
-            for (int x = 1; x < withdrawCount; x++) {
-                withdraw.pop();
+            if (item.getQuantity() > withdrawCount) {
+                withdraw.push(new InventorySetupsItem(item.getId(), item.getName(), (item.getQuantity() - withdrawCount), item.isFuzzy()));
             }
             targetMenu = new NewMenuEntry("Withdraw-" + withdrawCount, "Withdraw-" + withdrawCount, withdrawId, MenuAction.CC_OP.getId(),
                     bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
             click();
             return true;
         }
-        targetMenu = new NewMenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
+
+        int itemCount = getCount(item);
+        if (itemCount == 1) {
+            targetMenu = new NewMenuEntry("Withdraw-1", "Withdraw-1", (client.getVarbitValue(6590) == 0) ? 1 : 2, MenuAction.CC_OP.getId(),
+                    bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
+            click();
+            return true;
+        }
+        if (itemCount >= bankItemWidget.getItemQuantity()) {
+            for (int x = 1; x < itemCount; x++) {
+                withdraw.pop();
+            }
+            targetMenu = new NewMenuEntry("Withdraw-All", "Withdraw-All", 7, MenuAction.CC_OP.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
+            click();
+            return true;
+        }
+        if (shouldWithdrawX(itemCount) && config.withdrawXEnabled()) {
+            for (int x = 1; x < itemCount; x++) {
+                withdraw.pop();
+            }
+            if (currentWithdrawX == itemCount) {
+                targetMenu = new NewMenuEntry("Withdraw-" + currentWithdrawX, "Withdraw-" + currentWithdrawX, 5, MenuAction.CC_OP.getId(),
+                        bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
+                click();
+                return true;
+            }
+            setWithdrawX(bankItemWidget, itemCount);
+            return true;
+        }
+        int withdrawCount = getWithdrawCount(itemCount);
+        int withdrawId = getIdFromCount(withdrawCount);
+        for (int x = 1; x < withdrawCount; x++) {
+            withdraw.pop();
+        }
+        targetMenu = new NewMenuEntry("Withdraw-" + withdrawCount, "Withdraw-" + withdrawCount, withdrawId, MenuAction.CC_OP.getId(),
                 bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
         click();
         return true;
+    }
+
+    private void setWithdrawX(Widget bankItemWidget, int itemCount) {
+        closeWidget = false;
+        client.invokeMenuAction("Withdraw-X", "Withdraw-X", 6, MenuAction.CC_OP_LOW_PRIORITY.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId());
+        targetMenu = new NewMenuEntry("Cancel", "", 0, 1006, 0, 0, false);
+        click();
+        //log.info("Set withdraw x: " + itemCount);
+        client.runScript(108, "Enter amount:");
+        client.setVar(VarClientStr.INPUT_TEXT, "" + itemCount);
+        client.runScript(112, 84, 0, "");
+        client.runScript(112, -1, 10, "");
+        currentWithdrawX = itemCount;
+        closeWidget = true;
     }
 
     private boolean shouldWithdrawX(int count) {
