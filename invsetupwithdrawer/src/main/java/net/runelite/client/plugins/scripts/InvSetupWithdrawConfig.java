@@ -9,6 +9,7 @@ import net.runelite.client.config.Keybind;
 public interface InvSetupWithdrawConfig extends Config {
     String OPEN_SETUP = "openSetup";
     String WITHDRAW_TYPE = "withdrawType";
+    String WITHDRAWING = "withdrawing";
 
     @ConfigItem(
             keyName = "withdrawSetupHotkey",
@@ -51,7 +52,17 @@ public interface InvSetupWithdrawConfig extends Config {
     }
 
     @ConfigItem(
-            position = 5,
+            keyName = "withdrawExact",
+            name = "Use Withdraw X",
+            description = "Enables the use of withdraw X to withdraw exact stack amounts",
+            position = 5
+    )
+    default boolean withdrawXEnabled() {
+        return false;
+    }
+
+    @ConfigItem(
+            position = 6,
             keyName = "withdrawSpeed",
             name = "Withdraw Speed",
             description = "How fast to withdraw items"
