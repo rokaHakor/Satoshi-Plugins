@@ -4,10 +4,7 @@ import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Point;
 import net.runelite.api.*;
-import net.runelite.api.events.ClientTick;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.MenuOptionClicked;
-import net.runelite.api.events.VarClientIntChanged;
+import net.runelite.api.events.*;
 import net.runelite.api.queries.BankItemQuery;
 import net.runelite.api.queries.InventoryWidgetItemQuery;
 import net.runelite.api.widgets.Widget;
@@ -70,6 +67,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
     private boolean active;
     private boolean closeFinalWidget;
     private boolean closeWidget;
+    private boolean depositedInventory;
     private final LinkedList<InventorySetupsItem> withdraw = new LinkedList<>();
     private final LinkedList<InventorySetupsItem> equip = new LinkedList<>();
     private MenuEntry targetMenu;
@@ -123,6 +121,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
         this.targetMenu = null;
         this.active = false;
         this.closeFinalWidget = false;
+        this.depositedInventory = false;
 
         keyManager.registerKeyListener(quickWithdrawHotkeyListener);
         keyManager.registerKeyListener(quickEquipmentHotkeyListener);
@@ -200,7 +199,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
             targetMenu = null;
         }
         if (startWithdraw) {
-            if (event.getMenuTarget().contains("Withdraw") && event.getParam1() == WidgetInfo.BANK_ITEM_CONTAINER.getId()) {
+            if (event.getMenuOption().contains("Withdraw") && event.getParam1() == WidgetInfo.BANK_ITEM_CONTAINER.getId()) {
                 clickTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
             }
         }
@@ -212,10 +211,21 @@ public class InvSetupWithdrawPlugin extends Plugin {
     }
 
     @Subscribe
+    public void onChatMessage(ChatMessage event) {
+        if (event.getType() != ChatMessageType.GAMEMESSAGE) {
+            return;
+        }
+
+        if (event.getMessage().equalsIgnoreCase("Some of your items cannot be stored in the bank.")) {
+            depositedInventory = true;
+        }
+    }
+
+    @Subscribe
     private void onGameTick(final GameTick event) {
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
         if (startWithdraw && !inputLoop) {
-            if (itemContainerEmpty(inventory)) {
+            if (itemContainerEmpty(inventory) || depositedInventory) {
                 inputLoop = true;
                 withdrawNext();
             }
@@ -248,6 +258,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
             log.info("Inv Withdraw Finished");
             configManager.setConfiguration("invWithdrawer", InvSetupWithdrawConfig.WITHDRAWING, false);
             closeFinalWidget = true;
+            depositedInventory = false;
         }
     }
 
@@ -415,7 +426,6 @@ public class InvSetupWithdrawPlugin extends Plugin {
             if (shouldWithdrawX(item.getQuantity())) {
                 if (config.withdrawXEnabled()) {
                     if (currentWithdrawX == item.getQuantity()) {
-                        log.info("Doing Withdraw-" + currentWithdrawX);
                         targetMenu = new NewMenuEntry("Withdraw-" + currentWithdrawX, "Withdraw-" + currentWithdrawX, 5, MenuAction.CC_OP.getId(),
                                 bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
                         click();
@@ -480,9 +490,9 @@ public class InvSetupWithdrawPlugin extends Plugin {
 
     private void setWithdrawX(Widget bankItemWidget, int itemCount) {
         closeWidget = false;
-        client.invokeMenuAction("Withdraw-X", "Withdraw-X", 6, MenuAction.CC_OP_LOW_PRIORITY.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId());
         targetMenu = new NewMenuEntry("Cancel", "", 0, 1006, 0, 0, false);
         click();
+        client.invokeMenuAction("Withdraw-X", "invWithdrawer", 6, MenuAction.CC_OP_LOW_PRIORITY.getId(), bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId());
         //log.info("Set withdraw x: " + itemCount);
         client.runScript(108, "Enter amount:");
         client.setVar(VarClientStr.INPUT_TEXT, "" + itemCount);
