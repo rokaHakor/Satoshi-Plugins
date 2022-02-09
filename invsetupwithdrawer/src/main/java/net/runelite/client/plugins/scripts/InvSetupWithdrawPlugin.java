@@ -225,6 +225,7 @@ public class InvSetupWithdrawPlugin extends Plugin {
     private void onGameTick(final GameTick event) {
         ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
         if (startWithdraw && !inputLoop) {
+            currentWithdrawX = client.getVarbitValue(3960);
             if (itemContainerEmpty(inventory) || depositedInventory) {
                 inputLoop = true;
                 withdrawNext();
@@ -424,13 +425,13 @@ public class InvSetupWithdrawPlugin extends Plugin {
                 return true;
             }
             if (shouldWithdrawX(item.getQuantity())) {
+                if (currentWithdrawX == item.getQuantity()) {
+                    targetMenu = new NewMenuEntry("Withdraw-" + currentWithdrawX, "Withdraw-" + currentWithdrawX, 5, MenuAction.CC_OP.getId(),
+                            bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
+                    click();
+                    return true;
+                }
                 if (config.withdrawXEnabled()) {
-                    if (currentWithdrawX == item.getQuantity()) {
-                        targetMenu = new NewMenuEntry("Withdraw-" + currentWithdrawX, "Withdraw-" + currentWithdrawX, 5, MenuAction.CC_OP.getId(),
-                                bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
-                        click();
-                        return true;
-                    }
                     setWithdrawX(bankItemWidget, item.getQuantity());
                     return true;
                 }
@@ -464,18 +465,23 @@ public class InvSetupWithdrawPlugin extends Plugin {
             click();
             return true;
         }
-        if (shouldWithdrawX(itemCount) && config.withdrawXEnabled()) {
-            for (int x = 1; x < itemCount; x++) {
-                withdraw.pop();
-            }
+        if (shouldWithdrawX(itemCount)) {
             if (currentWithdrawX == itemCount) {
+                for (int x = 1; x < itemCount; x++) {
+                    withdraw.pop();
+                }
                 targetMenu = new NewMenuEntry("Withdraw-" + currentWithdrawX, "Withdraw-" + currentWithdrawX, 5, MenuAction.CC_OP.getId(),
                         bankItemWidget.getIndex(), WidgetInfo.BANK_ITEM_CONTAINER.getId(), false);
                 click();
                 return true;
             }
-            setWithdrawX(bankItemWidget, itemCount);
-            return true;
+            if (config.withdrawXEnabled()) {
+                for (int x = 1; x < itemCount; x++) {
+                    withdraw.pop();
+                }
+                setWithdrawX(bankItemWidget, itemCount);
+                return true;
+            }
         }
         int withdrawCount = getWithdrawCount(itemCount);
         int withdrawId = getIdFromCount(withdrawCount);
@@ -503,6 +509,9 @@ public class InvSetupWithdrawPlugin extends Plugin {
     }
 
     private boolean shouldWithdrawX(int count) {
+        if (currentWithdrawX == count) {
+            return true;
+        }
         int tenCount = count / 10;
         int remainder = count % 10;
         int fiveCount = remainder / 5;
