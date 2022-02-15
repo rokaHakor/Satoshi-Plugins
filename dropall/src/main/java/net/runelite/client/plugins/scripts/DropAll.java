@@ -164,15 +164,7 @@ public class DropAll extends Plugin {
             final Dimension real = client.getRealDimensions();
             final double width = (stretched.width / real.getWidth());
             final double height = (stretched.height / real.getHeight());
-            final Point point = new Point((int) (pos.getX() * width), (int) (pos.getY() * height));
-
-            long time = System.currentTimeMillis();
-            int randomValue = random.nextInt(50) + 50;
-
-            client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 501, time, 0, point.getX(), point.getY(), 1, false, 1));
-            client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 502, time + randomValue, 0, point.getX(), point.getY(), 1, false, 1));
-            client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 500, time + randomValue, 0, point.getX(), point.getY(), 1, false, 1));
-            return;
+            pos = new Point((int) (pos.getX() * width), (int) (pos.getY() * height));
         }
 
         long time = System.currentTimeMillis();
