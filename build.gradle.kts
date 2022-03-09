@@ -111,56 +111,9 @@ subprojects {
             fileMode = 420
         }
 
-//        withType<Jar> {
-//            doLast {
-//                val externalManagerDirectory: String = project.findProperty("externalManagerDirectory")?.toString()
-//                    ?: System.getProperty("user.home") + "\\.openosrs\\plugins"
-//                copy {
-//                    from("./build/libs/")
-//                    into(externalManagerDirectory)
-//                }
-//            }
-//        }
-
-        named<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask>("dependencyUpdates") {
-            checkForGradleUpdate = false
-
-            resolutionStrategy {
-                componentSelection {
-                    all {
-                        if (candidate.displayName.contains("fernflower") || isNonStable(candidate.version)) {
-                            reject("Non stable")
-                        }
-                    }
-                }
-            }
-        }
-
         register<Copy>("copyDeps") {
             into("./build/deps/")
             from(configurations["runtimeClasspath"])
         }
-    }
-}
-
-tasks {
-    named<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask>("dependencyUpdates") {
-        checkForGradleUpdate = false
-
-        resolutionStrategy {
-            componentSelection {
-                all {
-                    if (candidate.displayName.contains("fernflower") || isNonStable(candidate.version)) {
-                        reject("Non stable")
-                    }
-                }
-            }
-        }
-    }
-}
-
-fun isNonStable(version: String): Boolean {
-    return listOf("ALPHA", "BETA", "RC").any {
-        version.toUpperCase().contains(it)
     }
 }
