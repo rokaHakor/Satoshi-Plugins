@@ -2,10 +2,8 @@ package net.runelite.client.plugins.scripts;
 
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.MenuAction;
-import net.runelite.api.MenuEntry;
 import net.runelite.api.Point;
+import net.runelite.api.*;
 import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.MenuOptionClicked;
@@ -94,7 +92,7 @@ public class DropAll extends Plugin {
             WidgetItem drop = dropItems.pop();
             if (drop != null) {
                 dropTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
-                event.setMenuEntry(new NewMenuEntry("Drop", "Drop", drop.getId(), MenuAction.ITEM_FIFTH_OPTION.getId(), drop.getIndex(), WidgetInfo.INVENTORY.getId(), false));
+                event.setMenuEntry(new NewMenuEntry("Drop", "Drop", 7, MenuAction.CC_OP_LOW_PRIORITY.getId(), drop.getIndex(), WidgetInfo.INVENTORY.getId(), false));
                 clicked = false;
             }
         }
@@ -112,7 +110,7 @@ public class DropAll extends Plugin {
 
         // Inventory item menu
         if (widgetId == WidgetInfo.INVENTORY.getId()) {
-            int itemId = firstEntry.getIdentifier();
+            int itemId = getWidgetItemInSlot(firstEntry.getParam0()).getId();
 
             if (itemId == -1) {
                 return;
@@ -175,12 +173,95 @@ public class DropAll extends Plugin {
         client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 500, time + randomValue, 0, pos.getX(), pos.getY(), 1, false, 1));
     }
 
+    private WidgetItem createWidgetItem(Widget item) {
+        boolean isDragged = item.isWidgetItemDragged(item.getItemId());
+
+        int dragOffsetX = 0;
+        int dragOffsetY = 0;
+
+        if (isDragged) {
+            Point p = item.getWidgetItemDragOffsets();
+            dragOffsetX = p.getX();
+            dragOffsetY = p.getY();
+        }
+        // set bounds to same size as default inventory
+        Rectangle bounds = item.getBounds();
+        bounds.setBounds(bounds.x - 1, bounds.y - 1, 32, 32);
+        Rectangle dragBounds = item.getBounds();
+        dragBounds.setBounds(bounds.x + dragOffsetX, bounds.y + dragOffsetY, 32, 32);
+
+        return new WidgetItem(item.getItemId(), item.getItemQuantity(), item.getIndex(), bounds, item, dragBounds);
+    }
+
+    public Collection<WidgetItem> getWidgetItems() {
+        Widget geWidget = client.getWidget(WidgetInfo.GRAND_EXCHANGE_INVENTORY_ITEMS_CONTAINER);
+
+        boolean geOpen = geWidget != null && !geWidget.isHidden();
+        boolean bankOpen = !geOpen && client.getItemContainer(InventoryID.BANK) != null;
+
+        Widget inventoryWidget = client.getWidget(
+                bankOpen ? WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER :
+                        geOpen ? WidgetInfo.GRAND_EXCHANGE_INVENTORY_ITEMS_CONTAINER :
+                                WidgetInfo.INVENTORY
+        );
+
+        if (inventoryWidget == null) {
+            return new ArrayList<>();
+        }
+
+        if (!bankOpen && !geOpen && inventoryWidget.isHidden()) {
+            refreshInventory();
+        }
+
+        Widget[] children = inventoryWidget.getDynamicChildren();
+
+        if (children == null) {
+            return new ArrayList<>();
+        }
+
+        Collection<WidgetItem> widgetItems = new ArrayList<>();
+        for (Widget item : children) {
+            if (item.getItemId() != 6512) {
+                widgetItems.add(createWidgetItem(item));
+            }
+        }
+
+        return widgetItems;
+    }
+
+    public WidgetItem getWidgetItemInSlot(int slot) {
+        Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
+
+        if (inventoryWidget == null) {
+            return new WidgetItem(-1, 0, slot, null, null, null);
+        }
+
+        if (inventoryWidget.isHidden()) {
+            refreshInventory();
+        }
+
+        Widget[] children = inventoryWidget.getDynamicChildren();
+
+        if (children == null || slot >= children.length) {
+            return new WidgetItem(-1, 0, slot, null, null, null);
+        }
+        return createWidgetItem(children[slot]);
+    }
+
+    public void refreshInventory() {
+        if (client.isClientThread()) {
+            client.runScript(6009, 9764864, 28, 1, -1);
+        } else {
+            clientThread.invokeLater(() -> client.runScript(6009, 9764864, 28, 1, -1));
+        }
+    }
+
     public List<WidgetItem> getItems(int id) {
         Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
         List<WidgetItem> matchedItems = new ArrayList<>();
 
         if (inventoryWidget != null) {
-            Collection<WidgetItem> items = inventoryWidget.getWidgetItems();
+            Collection<WidgetItem> items = getWidgetItems();
             for (WidgetItem item : items) {
                 if (id == item.getId()) {
                     matchedItems.add(item);

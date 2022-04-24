@@ -2,9 +2,12 @@ package net.runelite.client.plugins.scripts;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
+import net.runelite.api.widgets.Widget;
 
+import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
@@ -49,6 +52,15 @@ public class NewMenuEntry implements MenuEntry {
      * This is used  for shift click
      */
     private boolean forceLeftClick;
+
+    @Setter
+    private int itemOp = -1;
+
+    @Setter
+    private int itemId = -1;
+
+    @Setter
+    private Widget widget;
 
     public NewMenuEntry(String option, String target, int identifier, int opcode, int param0, int param1, boolean forceLeftClick) {
         this.option = option;
@@ -163,6 +175,21 @@ public class NewMenuEntry implements MenuEntry {
     }
 
     @Override
+    public boolean isItemOp() {
+        return itemOp != -1;
+    }
+
+    @Override
+    public int getItemOp() {
+        return itemOp;
+    }
+
+    @Override
+    public int getItemId() {
+        return itemId;
+    }
+
+    @Override
     public int getOpcode() {
         return this.type.getId();
     }
@@ -195,5 +222,11 @@ public class NewMenuEntry implements MenuEntry {
     @Override
     public MenuAction getMenuAction() {
         return this.type;
+    }
+
+    @Nullable
+    @Override
+    public Widget getWidget() {
+        return widget;
     }
 }
