@@ -1,6 +1,6 @@
 import ProjectVersions.rlVersion
 
-version = "1.0.3"
+version = "1.0.4"
 
 project.extra["PluginName"] = "Drop All"
 project.extra["PluginDescription"] = "Drops all of an item"

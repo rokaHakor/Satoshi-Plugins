@@ -5,11 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Point;
 import net.runelite.api.*;
 import net.runelite.api.events.ClientTick;
+import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
-import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -55,16 +55,14 @@ public class DropAll extends Plugin {
 
     private static final String DROP_ALL = "Drop-all";
 
-    private final LinkedList<WidgetItem> dropItems = new LinkedList<>();
+    private final LinkedHashSet<SatoItem> dropItems = new LinkedHashSet<>();
     private final Random random = new Random();
 
     private long dropTimer;
-    private boolean clicked;
 
     @Override
     protected void startUp() {
         dropItems.clear();
-        clicked = false;
         dropTimer = 0;
     }
 
@@ -73,27 +71,47 @@ public class DropAll extends Plugin {
         menuManager.removePlayerMenuItem(DROP_ALL);
     }
 
-    @SuppressWarnings("DuplicatedCode")
     @Subscribe
     public void onMenuOptionClicked(MenuOptionClicked event) {
+        if (!dropItems.isEmpty()) {
+            Iterator<SatoItem> i = dropItems.iterator();
+            SatoItem drop = i.next();
+            i.remove();
+            if (drop != null) {
+                dropTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
+                event.setMenuEntry(new NewMenuEntry("Drop", "Drop", 7, MenuAction.CC_OP_LOW_PRIORITY.getId(), drop.getIndex(), WidgetInfo.INVENTORY.getId(), false));
+                return;
+            }
+        }
+
         if (event.getMenuAction() == MenuAction.RUNELITE) {
             if (event.getMenuOption().equals(DROP_ALL)) {
-                log.info("Drop-all");
-                List<WidgetItem> drop = getItems(event.getId());
+                List<SatoItem> drop = getItems(event.getId());
                 if (!drop.isEmpty()) {
                     dropItems.addAll(drop);
                     return;
                 }
             }
-            return;
         }
+    }
 
-        if (!dropItems.isEmpty()) {
-            WidgetItem drop = dropItems.pop();
-            if (drop != null) {
-                dropTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
-                event.setMenuEntry(new NewMenuEntry("Drop", "Drop", 7, MenuAction.CC_OP_LOW_PRIORITY.getId(), drop.getIndex(), WidgetInfo.INVENTORY.getId(), false));
-                clicked = false;
+    @Subscribe(priority = 1)
+    public void onMenuEntryAdded(MenuEntryAdded event) {
+        final int widgetId = event.getActionParam1();
+
+        if (widgetId == WidgetInfo.INVENTORY.getId()) {
+            int itemId = getWidgetItemInSlot(event.getActionParam0()).getId();
+
+            if (itemId == -1) {
+                return;
+            }
+            if (event.getOption().equals("Drop")) {
+                client.createMenuEntry(config.removeExamine() ? 1 : 2).setOption(DROP_ALL)
+                        .setTarget(ColorUtil.prependColorTag(client.getItemComposition(itemId).getName(), new Color(255, 144, 64)))
+                        .setIdentifier(itemId)
+                        .setParam1(0)
+                        .setParam1(widgetId)
+                        .setType(MenuAction.RUNELITE);
             }
         }
     }
@@ -102,13 +120,12 @@ public class DropAll extends Plugin {
     public void onMenuOpened(final MenuOpened event) {
         final MenuEntry firstEntry = event.getFirstEntry();
 
-        if (firstEntry == null) {
+        if (firstEntry == null || !config.removeExamine()) {
             return;
         }
 
         final int widgetId = firstEntry.getParam1();
 
-        // Inventory item menu
         if (widgetId == WidgetInfo.INVENTORY.getId()) {
             int itemId = getWidgetItemInSlot(firstEntry.getParam0()).getId();
 
@@ -116,29 +133,16 @@ public class DropAll extends Plugin {
                 return;
             }
             MenuEntry[] menuEntries = client.getMenuEntries();
-            MenuEntry[] newEntries = Arrays.copyOf(menuEntries, menuEntries.length - 1);
-            int index = 0;
+            ArrayList<MenuEntry> entryList = new ArrayList<>();
             boolean hasDrop = false;
             for (MenuEntry entry : menuEntries) {
                 if (!entry.getOption().equals("Examine")) {
-                    newEntries[index] = entry;
-                    index++;
-                }
-                if (entry.getOption().equals("Drop")) {
-                    hasDrop = true;
+                    entryList.add(entry);
                 }
             }
-            if (config.removeExamine()) {
-                client.setMenuEntries(newEntries);
-            }
-            if (hasDrop) {
-                client.createMenuEntry(config.removeExamine() ? 1 : 2).setOption(DROP_ALL)
-                        .setTarget(ColorUtil.prependColorTag(client.getItemComposition(itemId).getName(), new Color(255, 144, 64)))
-                        .setIdentifier(itemId)
-                        .setParam1(0)
-                        .setParam1(widgetId)
-                        .setType(MenuAction.RUNELITE);
-            }
+            MenuEntry[] newEntries = new MenuEntry[entryList.size()];
+            newEntries = entryList.toArray(newEntries);
+            client.setMenuEntries(newEntries);
             return;
         }
     }
@@ -148,9 +152,8 @@ public class DropAll extends Plugin {
         if (dropItems.isEmpty()) {
             return;
         }
-        if (!clicked && dropTimer < System.currentTimeMillis()) {
+        if (dropTimer < System.currentTimeMillis()) {
             click();
-            clicked = true;
         }
     }
 
@@ -173,27 +176,14 @@ public class DropAll extends Plugin {
         client.getCanvas().dispatchEvent(new MouseEvent(client.getCanvas(), 500, time + randomValue, 0, pos.getX(), pos.getY(), 1, false, 1));
     }
 
-    private WidgetItem createWidgetItem(Widget item) {
-        boolean isDragged = item.isWidgetItemDragged(item.getItemId());
-
-        int dragOffsetX = 0;
-        int dragOffsetY = 0;
-
-        if (isDragged) {
-            Point p = item.getWidgetItemDragOffsets();
-            dragOffsetX = p.getX();
-            dragOffsetY = p.getY();
+    private SatoItem createWidgetItem(Widget item) {
+        if (item.getItemId() == 6512) {
+            return new SatoItem(-1, 0, item.getIndex(), item);
         }
-        // set bounds to same size as default inventory
-        Rectangle bounds = item.getBounds();
-        bounds.setBounds(bounds.x - 1, bounds.y - 1, 32, 32);
-        Rectangle dragBounds = item.getBounds();
-        dragBounds.setBounds(bounds.x + dragOffsetX, bounds.y + dragOffsetY, 32, 32);
-
-        return new WidgetItem(item.getItemId(), item.getItemQuantity(), item.getIndex(), bounds, item, dragBounds);
+        return new SatoItem(item.getItemId(), item.getItemQuantity(), item.getIndex(), item);
     }
 
-    public Collection<WidgetItem> getWidgetItems() {
+    public Collection<SatoItem> getWidgetItems() {
         Widget geWidget = client.getWidget(WidgetInfo.GRAND_EXCHANGE_INVENTORY_ITEMS_CONTAINER);
 
         boolean geOpen = geWidget != null && !geWidget.isHidden();
@@ -219,21 +209,19 @@ public class DropAll extends Plugin {
             return new ArrayList<>();
         }
 
-        Collection<WidgetItem> widgetItems = new ArrayList<>();
+        Collection<SatoItem> widgetItems = new ArrayList<>();
         for (Widget item : children) {
-            if (item.getItemId() != 6512) {
-                widgetItems.add(createWidgetItem(item));
-            }
+            widgetItems.add(createWidgetItem(item));
         }
 
         return widgetItems;
     }
 
-    public WidgetItem getWidgetItemInSlot(int slot) {
+    public SatoItem getWidgetItemInSlot(int slot) {
         Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
 
         if (inventoryWidget == null) {
-            return new WidgetItem(-1, 0, slot, null, null, null);
+            return new SatoItem(-1, 0, slot, null);
         }
 
         if (inventoryWidget.isHidden()) {
@@ -242,9 +230,10 @@ public class DropAll extends Plugin {
 
         Widget[] children = inventoryWidget.getDynamicChildren();
 
-        if (children == null || slot >= children.length) {
-            return new WidgetItem(-1, 0, slot, null, null, null);
+        if (children == null || slot >= children.length || slot < 0) {
+            return new SatoItem(-1, 0, slot, null);
         }
+
         return createWidgetItem(children[slot]);
     }
 
@@ -256,13 +245,13 @@ public class DropAll extends Plugin {
         }
     }
 
-    public List<WidgetItem> getItems(int id) {
+    public List<SatoItem> getItems(int id) {
         Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
-        List<WidgetItem> matchedItems = new ArrayList<>();
+        List<SatoItem> matchedItems = new ArrayList<>();
 
         if (inventoryWidget != null) {
-            Collection<WidgetItem> items = getWidgetItems();
-            for (WidgetItem item : items) {
+            Collection<SatoItem> items = getWidgetItems();
+            for (SatoItem item : items) {
                 if (id == item.getId()) {
                     matchedItems.add(item);
                 }
