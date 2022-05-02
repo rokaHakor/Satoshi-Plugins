@@ -71,26 +71,29 @@ public class DropAll extends Plugin {
         menuManager.removePlayerMenuItem(DROP_ALL);
     }
 
-    @Subscribe
+    @Subscribe(priority = 1)
     public void onMenuOptionClicked(MenuOptionClicked event) {
         if (!dropItems.isEmpty()) {
             Iterator<SatoItem> i = dropItems.iterator();
             SatoItem drop = i.next();
-            i.remove();
             if (drop != null) {
                 dropTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
                 event.setMenuEntry(new NewMenuEntry("Drop", "Drop", 7, MenuAction.CC_OP_LOW_PRIORITY.getId(), drop.getIndex(), WidgetInfo.INVENTORY.getId(), false));
+                i.remove();
                 return;
             }
         }
 
-        if (event.getMenuAction() == MenuAction.RUNELITE) {
-            if (event.getMenuOption().equals(DROP_ALL)) {
-                List<SatoItem> drop = getItems(event.getId());
-                if (!drop.isEmpty()) {
-                    dropItems.addAll(drop);
-                    return;
-                }
+        if ((event.getMenuAction() == MenuAction.CC_OP_LOW_PRIORITY || event.getMenuAction() == MenuAction.CC_OP) && event.getMenuOption().equals(DROP_ALL)) {
+            event.consume();
+            int itemId = getWidgetItemInSlot(event.getParam0()).getId();
+            if (itemId == -1) {
+                return;
+            }
+            List<SatoItem> drop = getItems(itemId);
+            if (!drop.isEmpty()) {
+                dropItems.addAll(drop);
+                return;
             }
         }
     }
@@ -100,18 +103,18 @@ public class DropAll extends Plugin {
         final int widgetId = event.getActionParam1();
 
         if (widgetId == WidgetInfo.INVENTORY.getId()) {
-            int itemId = getWidgetItemInSlot(event.getActionParam0()).getId();
+            SatoItem item = getWidgetItemInSlot(event.getActionParam0());
 
-            if (itemId == -1) {
+            if (item.getId() == -1) {
                 return;
             }
             if (event.getOption().equals("Drop")) {
                 client.createMenuEntry(config.removeExamine() ? 1 : 2).setOption(DROP_ALL)
-                        .setTarget(ColorUtil.prependColorTag(client.getItemComposition(itemId).getName(), new Color(255, 144, 64)))
-                        .setIdentifier(itemId)
-                        .setParam1(0)
+                        .setTarget(ColorUtil.prependColorTag(client.getItemComposition(item.getId()).getName(), new Color(255, 144, 64)))
+                        .setIdentifier(7)
+                        .setParam0(item.getIndex())
                         .setParam1(widgetId)
-                        .setType(MenuAction.RUNELITE);
+                        .setType(MenuAction.CC_OP_LOW_PRIORITY);
             }
         }
     }
@@ -153,6 +156,7 @@ public class DropAll extends Plugin {
             return;
         }
         if (dropTimer < System.currentTimeMillis()) {
+            dropTimer = System.currentTimeMillis() + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + random.nextInt(config.speed().getSpeed()) + 75;
             click();
         }
     }
